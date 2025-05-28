@@ -26,8 +26,18 @@ const getPrendaById = async (req, res) => {
 // Crear una prenda
 const createPrenda = async (req, res) => {
     try {
-        const prenda = await Prenda.create(req.body);
-        res.status(201).json(prenda);
+        const {nombre,  descripcion, precio, imagenes, colores} = req.body;
+        const nuevaPrenda = {
+            nombre,
+            descripcion,
+            precio,
+            imagenes,
+            colores
+        }
+
+        // ver que hacer con la marca ya que es una FK
+
+        res.status(201).json(nuevaPrenda);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -35,9 +45,19 @@ const createPrenda = async (req, res) => {
 // Actualizar una prenda
 const updatePrenda = async (req, res) => {
     try {
+        const {nombre,  descripcion, precio, imagenes, colores} = req.body;
         const prenda = await Prenda.findByPk(req.params.id);
         if (prenda) {
-            await prenda.update(req.body);
+            await prenda.update({
+                nombre: nombre || prenda.nombre,
+                descripcion: descripcion || prenda.descripcion,
+                precio: precio || prenda.precio,
+                imagenes: imagenes || prenda.imagenes,
+                colores: colores || prenda.colores
+            });
+
+            // ver que hacer con la marca ya que es una FK
+            
             res.json(prenda);   
         } else {
             res.status(404).json({ message: 'Prenda no encontrada' });
