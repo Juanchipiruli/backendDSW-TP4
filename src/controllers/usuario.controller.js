@@ -16,6 +16,7 @@ const getUsersbyId = async (req, res) => {
 const createUser = async (req, res) => {
     try{
         const {nombre, email, password, telefono, isAdmin=false, isAuthenticated=true} = req.body
+        console.log("hola");
         const newUser = await User.create({nombre, email, password, telefono, isAdmin:false, isAuthenticated:true})
         res.status(201).json({message: 'Usuario creado correctamente'})
     }catch (error){

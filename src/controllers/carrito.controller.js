@@ -15,11 +15,9 @@ const getCarrito = async (req, res) => {
 
 const createCarrito = async(req, res) => {
     try{
-        const {a}=req.body; //a hay q reemplazarlo pasa que no se como usar FKs
-        const carrito = await Carrito.create({
-            a
-        });
-        res.status(201).json(prenda)
+        const {elementList}=req.body; 
+        const carrito = await Carrito.create({elementList});
+        res.status(201).json(prenda);
     } catch(error){
         res.status(500).json({message: error.message})
     }
@@ -27,12 +25,10 @@ const createCarrito = async(req, res) => {
 
 const updateCarrito = async(req, res) => {
     try{
-        const {a}=req.body;
+        const {elementList}=req.body;
         const carrito = await Carrito.findByPk();
         if (carrito){
-            await prenda.update({
-                a
-            })
+            await prenda.update({elementList});
         } else {
             res.status(404).json({message: 'Carrito no encontrado'})
         }

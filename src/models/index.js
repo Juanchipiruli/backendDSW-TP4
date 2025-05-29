@@ -1,7 +1,7 @@
 const Marca = require('./marca');
 const Talle = require('./talle');
 const Color = require('./color');
-const Usuario = require('./usuario');
+const User = require('./usuario');
 const Prenda = require('./prenda');
 const Stock = require('./stock');
 const { Carrito, CarritoStock } = require('./carrito');
@@ -12,7 +12,7 @@ module.exports = {
   Marca,
   Talle,
   Color,
-  Usuario,
+  User,
   Prenda,
   Stock,
   Carrito,
