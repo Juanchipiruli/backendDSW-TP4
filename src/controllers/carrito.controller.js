@@ -1,13 +1,11 @@
 const { Carrito, CarritoStock, Stock, Prenda, User } = require('../models');
 const sequelize = require('../config/database');
 
-/**
- * Get cart by ID with all its items
- */
+// Funcion que devuelve el carrito con sus items y el detalle de cada item con la prenda completa
 const getCarrito = async (req, res) => {
     try {
-        const carrito = await Carrito.findByPk(req.params.id, {
-            include: [{
+        const carrito = await Carrito.findByPk(req.params.id, { // Obtenemos el carrito con su id
+            include: [{ // Indicamos que informacion del carrito queremos devolver
                 model: Stock,
                 include: [{
                     model: Prenda,
@@ -16,33 +14,31 @@ const getCarrito = async (req, res) => {
             }]
         });
 
-        if (!carrito) {
+        if (!carrito) { // Validacion por si no se encuentra el carrito
             return res.status(404).json({ message: 'Carrito no encontrado' });
         }
 
-        res.json(carrito);
+        res.json(carrito); // Devolvemos el carrito
     } catch (error) {
-        res.status(500).json({
+        res.status(500).json({ // Devolvemos un error si algo sale mal
             message: 'Error al obtener el carrito',
             error: error.message
         });
     }
 };
 
-/**
- * Get user's active cart or create a new one if none exists
- */
+// Funcion que devuelve el carrito activo de un usuario y si no tiene uno lo crea
 const getUserCart = async (req, res) => {
     try {
-        const { usuario_id } = req.params;
+        const { usuario_id } = req.params; // Obtenemos el id del usuario de la request
         
-        // Check if user exists
+        // Obtenemos el usuario a traves de su id
         const user = await User.findByPk(usuario_id);
         if (!user) {
-            return res.status(404).json({ message: 'Usuario no encontrado' });
+            return res.status(404).json({ message: 'Usuario no encontrado' }); // Devolvemos error si no se encuentra el usuario
         }
         
-        // Find active cart or create new one
+        // Obtenemos el carrito activo con el id del usuario
         let carrito = await Carrito.findOne({
             where: { usuario_id },
             include: [{
@@ -54,9 +50,9 @@ const getUserCart = async (req, res) => {
             }]
         });
         
-        if (!carrito) {
+        if (!carrito) { // Si no encontramos un carrito activo creamos uno y lo obtenemos
             carrito = await Carrito.create({ usuario_id });
-            // Fetch again with includes
+
             carrito = await Carrito.findByPk(carrito.id, {
                 include: [{
                     model: Stock,
@@ -68,80 +64,78 @@ const getUserCart = async (req, res) => {
             });
         }
         
-        res.json(carrito);
+        res.json(carrito); // Devolvemos el carrito
     } catch (error) {
-        res.status(500).json({
+        res.status(500).json({ // Devolvemos un error si algo sale mal
             message: 'Error al obtener/crear el carrito del usuario',
             error: error.message
         });
     }
 };
 
-/**
- * Create a new cart for a user
- */
+// Funcion para crear un carrito para un usuario ****CHEQUEAR****
 const createCarrito = async (req, res) => {
     try {
-        const { usuario_id } = req.body;
+        const { usuario_id } = req.body; // Obtenemos el id del usuario de la request
         
-        // Validate required field
+        // Validacion por si no se envía el id del usuario
         if (!usuario_id) {
             return res.status(400).json({ message: 'El ID de usuario es requerido' });
         }
 
-        // Validate user exists
+        // Validamos que el usuario exista
         const user = await User.findByPk(usuario_id);
         if (!user) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
-        // Create cart
+        // Creamos el carrito vinculado al usuario
         const carrito = await Carrito.create({ usuario_id });
 
-        res.status(201).json({
+        res.status(201).json({ // Devolvemos mensaje con el carrito creado
             message: 'Carrito creado correctamente',
             carrito
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(500).json({ // Devolvemos error si algo sale mal
             message: 'Error al crear el carrito',
             error: error.message
         });
     }
 };
 
-/**
- * Add item to cart
- */
+// Funcion para agregar un item al carrito
 const addItemToCarrito = async (req, res) => {
-    const t = await sequelize.transaction();
+    const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
 
     try {
-        const { carrito_id, stock_id, cantidad } = req.body;
+        const { carrito_id, stock_id, cantidad } = req.body; // Obtenemos el id del carrito, el id del stock y la cantidad de items
 
-        // Validate input
+        // Validamos los datos que se estan enviando y que cantidad no sea menor a 1
         if (!carrito_id || !stock_id || !cantidad || cantidad < 1) {
             return res.status(400).json({
                 message: 'Datos inválidos para agregar item al carrito'
             });
         }
 
-        // Check if cart exists
+        // Verificamos si existe un carrito para el usuario
         const carrito = await Carrito.findByPk(carrito_id);
-        if (!carrito) {
+        if (!carrito) { // Devolvemos error si el usuario no tiene un carrito asociado
             return res.status(404).json({ message: 'Carrito no encontrado' });
         }
 
-        // Check if stock exists and has enough quantity
+        // Verificamos si existe un stock con el id recibido
         const stock = await Stock.findByPk(stock_id);
         if (!stock) {
             return res.status(404).json({ message: 'Stock no encontrado' });
         }
 
+        // Verificamos si este stock esta disponible
         if (!stock.disponible) {
             return res.status(400).json({ message: 'Este producto no está disponible actualmente' });
         }
 
+        // Verificamos si este stock tiene la cantidad solicitada
         if (stock.cantidad < cantidad) {
             return res.status(400).json({ 
                 message: 'No hay suficiente stock disponible',
@@ -149,7 +143,7 @@ const addItemToCarrito = async (req, res) => {
             });
         }
 
-        // Add or update cart item
+        // Creamos o actualizamos el carrito
         const [carritoStock, created] = await CarritoStock.findOrCreate({
             where: { CarritoId: carrito_id, StockId: stock_id },
             defaults: { cantidad },
@@ -169,7 +163,7 @@ const addItemToCarrito = async (req, res) => {
                 });
             }
             
-            await carritoStock.update({
+            await carritoStock.update({ // Actualizamos la cantidad del item en el carrito
                 cantidad: nuevaCantidad
             }, { transaction: t });
         }
@@ -183,41 +177,39 @@ const addItemToCarrito = async (req, res) => {
         });
     } catch (error) {
         await t.rollback();
-        res.status(500).json({
+        res.status(500).json({ // Devolvemos error si algo sale mal 
             message: 'Error al agregar item al carrito',
             error: error.message
         });
     }
 };
 
-/**
- * Update cart item quantity
- */
+// Actualizamos la cantidad de un item en el carrito
 const updateCarritoItem = async (req, res) => {
-    const t = await sequelize.transaction();
+    const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
 
     try {
-        const { carrito_id, stock_id, cantidad } = req.body;
+        const { carrito_id, stock_id, cantidad } = req.body; // Obtenemos el id del carrito, del stock y la cantidad del item
 
-        // Validate input
+        // Validamos los datos de entrada
         if (!carrito_id || !stock_id || cantidad === undefined || cantidad < 0) {
             return res.status(400).json({
                 message: 'Datos inválidos para actualizar item del carrito'
             });
         }
 
-        // Find cart item
+        // Buscamos el item del carrito a modificar
         const carritoStock = await CarritoStock.findOne({
             where: { CarritoId: carrito_id, StockId: stock_id }
         });
 
+        // Si no obtenemos un item devolvemos un error
         if (!carritoStock) {
             return res.status(404).json({ message: 'Item no encontrado en el carrito' });
         }
 
-        // If quantity is 0, remove the item
+        // Si la cantidad es 0 removemos el item del carrito
         if (cantidad === 0) {
-            // Remove item from cart
             await carritoStock.destroy({ transaction: t });
             
             await t.commit();
@@ -225,7 +217,7 @@ const updateCarritoItem = async (req, res) => {
             return res.json({ message: 'Item eliminado del carrito correctamente' });
         }
 
-        // Get stock information
+        // Obtenemos el stock del item a modificar
         const stock = await Stock.findByPk(stock_id);
         
         // Verificar que haya suficiente stock disponible
@@ -237,7 +229,7 @@ const updateCarritoItem = async (req, res) => {
             });
         }
 
-        // Update cart item
+        // Actualizamos la cantidad del item en el carrito
         await carritoStock.update({ cantidad }, { transaction: t });
 
         await t.commit();
@@ -246,7 +238,7 @@ const updateCarritoItem = async (req, res) => {
             message: 'Item del carrito actualizado correctamente',
             carritoStock
         });
-    } catch (error) {
+    } catch (error) { // Devolvemos error si algo sale mal
         await t.rollback();
         res.status(500).json({
             message: 'Error al actualizar item del carrito',
@@ -255,31 +247,30 @@ const updateCarritoItem = async (req, res) => {
     }
 };
 
-/**
- * Remove item from cart
- */
+// Removemos un item del carrito
 const removeCarritoItem = async (req, res) => {
-    const t = await sequelize.transaction();
+    const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
 
     try {
-        const { carrito_id, stock_id } = req.params;
+        const { carrito_id, stock_id } = req.params; // Obtenemos el id del carrito y el del stock
 
-        // Find cart item
+        // Obtenemos el item a remover del carrito
         const carritoStock = await CarritoStock.findOne({
             where: { CarritoId: carrito_id, StockId: stock_id }
         });
 
+        // Si no encontramos el item devolvemos un error
         if (!carritoStock) {
             return res.status(404).json({ message: 'Item no encontrado en el carrito' });
         }
 
-        // Remove item from cart
+        // Removemos el item del carrito
         await carritoStock.destroy({ transaction: t });
 
         await t.commit();
 
         res.json({ message: 'Item eliminado del carrito correctamente' });
-    } catch (error) {
+    } catch (error) { // Devolvemos error si algo sale mal
         await t.rollback();
         res.status(500).json({
             message: 'Error al eliminar item del carrito',
@@ -288,26 +279,25 @@ const removeCarritoItem = async (req, res) => {
     }
 };
 
-/**
- * Delete cart
- */
+// Funcion para eliminar el carrito
 const deleteCarrito = async (req, res) => {
-    const t = await sequelize.transaction();
+    const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
 
     try {
-        const carrito = await Carrito.findByPk(req.params.id);
+        const carrito = await Carrito.findByPk(req.params.id); // Obtenemos el carrito por su id
 
+        // Si no se encuentra el carrito devolvemos un error
         if (!carrito) {
             return res.status(404).json({ message: 'Carrito no encontrado' });
         }
 
-        // Delete cart and all its items (CarritoStock records will be eliminados por cascada)
+        // Eliminamos el carrito
         await carrito.destroy({ transaction: t });
 
         await t.commit();
 
         res.json({ message: 'Carrito eliminado correctamente' });
-    } catch (error) {
+    } catch (error) { // Devolvemos error si algo sale mal
         await t.rollback();
         res.status(500).json({
             message: 'Error al eliminar el carrito',
@@ -316,9 +306,7 @@ const deleteCarrito = async (req, res) => {
     }
 };
 
-/**
- * Checkout cart - simulates purchase completion
- */
+// ****CHEQUEAR****
 const checkoutCarrito = async (req, res) => {
     const t = await sequelize.transaction();
     
