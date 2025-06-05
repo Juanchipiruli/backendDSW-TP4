@@ -1,4 +1,4 @@
-const { Color } = require('../models');
+const { Color, Stock } = require('../models');
 
 // Obtener todos los colores
 const getAllColores = async (req, res) => {
@@ -62,11 +62,16 @@ const updateColor = async (req, res) => {
 const deleteColor = async (req, res) => {
     try {
         const color = await Color.findByPk(req.params.id);
-        if (color) {
-            await color.destroy();
-            res.json({ message: 'Color eliminado correctamente' });
-        } else {
+        if (!color) {
             res.status(404).json({ message: 'Color no encontrado' });
+        } else {
+            const existingColor = await Stock.findOne({ where: { color_id: req.params.id } }); // Valida que un stock no tenga este color asociado
+            if (existingColor) {
+                res.status(400).json({ message: 'No se puede eliminar este color porque tiene stock asociado' });
+            } else {
+                await color.destroy();
+                res.json({ message: 'Color eliminado' });
+            }
         }
     } catch (error) {
         res.status(500).json({ message: error.message });

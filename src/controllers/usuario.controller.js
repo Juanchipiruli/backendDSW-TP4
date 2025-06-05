@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 
 /**
- * Get all users
+ * Se obtienen todos los usuarios
  */
 const getAllUsers = async (req, res) => {
     try {
@@ -20,7 +20,7 @@ const getAllUsers = async (req, res) => {
 };
 
 /**
- * Get a user by ID
+ * Se obtiene un solo usuario con su id
  */
 const getUserById = async (req, res) => {
     try {
@@ -42,20 +42,20 @@ const getUserById = async (req, res) => {
 };
 
 /**
- * Create a new user
+ * Se crea un usuario
  */
 const createUser = async (req, res) => {
     try {
         const { nombre, email, password, telefono, is_admin = false } = req.body;
         
-        // Validate required fields
+        // Se valida que haya nombre, mail y contra
         if (!nombre || !email || !password) {
             return res.status(400).json({ 
                 message: 'Los campos nombre, email y password son obligatorios' 
             });
         }
         
-        // Validate email format
+        // Se valida la estructura del mail
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
             return res.status(400).json({ 
@@ -63,7 +63,7 @@ const createUser = async (req, res) => {
             });
         }
         
-        // Check if email already exists
+        // Se controla que el mail no este ya registrado
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ 
@@ -75,7 +75,7 @@ const createUser = async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         
-        // Create user
+        // Se crea el usuario
         const newUser = await User.create({
             nombre,
             email,
@@ -85,7 +85,7 @@ const createUser = async (req, res) => {
             is_authenticated: true
         });
         
-        // Return user without password
+        // Se devuelve el usuario sin la contraseña
         const userResponse = {
             id: newUser.id,
             nombre: newUser.nombre,
@@ -114,7 +114,7 @@ const createUser = async (req, res) => {
 };
 
 /**
- * Update an existing user
+ * Se actualiza un usuario
  */
 const updateUser = async (req, res) => {
     try {
@@ -125,7 +125,7 @@ const updateUser = async (req, res) => {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         
-        // Validate email format if provided
+        // Se valida la estructura del mail
         if (email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
@@ -134,7 +134,7 @@ const updateUser = async (req, res) => {
                 });
             }
             
-            // Check if email is taken by another user
+            // Se controla que el mail no este ya registrado
             if (email !== user.email) {
                 const existingUser = await User.findOne({ 
                     where: { 
@@ -151,7 +151,7 @@ const updateUser = async (req, res) => {
             }
         }
         
-        // Prepare data for update
+        // Se prepara los datos del usuario para devolver
         const updateData = {};
         
         if (nombre !== undefined) updateData.nombre = nombre;
@@ -160,7 +160,7 @@ const updateUser = async (req, res) => {
         if (is_admin !== undefined) updateData.is_admin = is_admin;
         if (is_authenticated !== undefined) updateData.is_authenticated = is_authenticated;
         
-        // If password is provided, hash it
+        // Si se provee contraseña, se hashea
         if (password) {
             const saltRounds = 10;
             updateData.password = await bcrypt.hash(password, saltRounds);
@@ -169,7 +169,7 @@ const updateUser = async (req, res) => {
         // Update user
         await user.update(updateData);
         
-        // Get updated user without password
+        // Se obtiene el usuario actualizado sin la contraseña
         const updatedUser = await User.findByPk(req.params.id, {
             attributes: { exclude: ['password'] }
         });
@@ -191,7 +191,7 @@ const updateUser = async (req, res) => {
 };
 
 /**
- * Delete a user
+ * Eliminar usuario
  */
 const deleteUser = async (req, res) => {
     try {
@@ -201,15 +201,13 @@ const deleteUser = async (req, res) => {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         
-        // Check if user has any active carts
+        // Se verifica si el usuario tiene algun carrito, si lo tiene se borra
         const carritosAsociados = await Carrito.findOne({ 
             where: { usuario_id: user.id } 
         });
         
         if (carritosAsociados) {
-            return res.status(400).json({ 
-                message: 'No se puede eliminar el usuario porque tiene carritos asociados. Elimine primero los carritos.'
-            });
+            carritosAsociados.destroy()
         }
         
         await user.destroy();
@@ -223,37 +221,37 @@ const deleteUser = async (req, res) => {
 };
 
 /**
- * Login a user
+ * Login de usuario
  */
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Validate required fields
+        // Se valida que se obtenga contraseña y mail
         if (!email || !password) {
             return res.status(400).json({ 
                 message: 'Email y password son requeridos' 
             });
         }
         
-        // Find user by email
+        // Se encuentra el usuario con el mail
         const user = await User.findOne({ where: { email } });
         
         if (!user) {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
         
-        // Verify password
+        // Verificar coincidencia de contraseña
         const passwordMatch = await bcrypt.compare(password, user.password);
         
         if (!passwordMatch) {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
         
-        // Update authentication status
-        await user.update({ is_authenticated: true });
+        // Se actualiza el estado de autenticación
+        await user.update({ is_authenticated: true }); //vamos a tener que cambiarlo por la autenticacion via mail
         
-        // Prepare response (without password)
+        // Se preparan los datos SIN CONTRASEÑA
         const userResponse = {
             id: user.id,
             nombre: user.nombre,
@@ -276,7 +274,7 @@ const loginUser = async (req, res) => {
 };
 
 /**
- * Logout a user
+ * Cierre de sesion
  */
 const logoutUser = async (req, res) => {
     try {

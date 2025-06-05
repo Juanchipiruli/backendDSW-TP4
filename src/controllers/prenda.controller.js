@@ -125,10 +125,10 @@ const deletePrenda = async (req, res) => {
             return res.status(400).json({ 
                 message: 'No se puede eliminar la prenda porque tiene stock asociado. Elimine primero el stock.'
             });
+        } else{
+            await prenda.destroy();
+            res.json({ message: 'Prenda eliminada correctamente' });
         }
-        
-        await prenda.destroy();
-        res.json({ message: 'Prenda eliminada correctamente' });
     } catch (error){
         res.status(500).json({message: 'Error al eliminar la prenda', error: error.message})
     }

@@ -1,4 +1,4 @@
-const { Talle } = require('../models');
+const { Talle, Stock } = require('../models');
 
 // Obtener todos los talles
 const getAllTalles = async (req, res) => {
@@ -56,11 +56,17 @@ const updateTalle = async (req, res) => {
 const deleteTalle = async (req, res) => {
     try {
         const talle = await Talle.findByPk(req.params.id);
-        if (talle) {
-            await talle.destroy();
-            res.json({ message: 'Talle eliminado correctamente' });
-        } else {
+        if (!talle) {
             res.status(404).json({ message: 'Talle no encontrado' });
+        } else {
+            const existingTalle = await Stock.findOne({ where: { talle_id: req.params.id } }); // Valida que un stock no tenga este talle asociado
+            if (existingTalle) {
+                return res.status(400).json({ message: 'No se puede eliminar el talle porque está asociado a un stock' });
+            }else{
+                await talle.destroy();
+                res.json({ message: 'Talle eliminado correctamente' });
+            }
+            
         }
     } catch (error) {
         res.status(500).json({ message: error.message });

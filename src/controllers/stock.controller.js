@@ -1,4 +1,5 @@
 const { Stock, Prenda, Color, Talle } = require('../models');
+const { Op } = require('sequelize');
 
 // Crear un nuevo registro de stock
 const createStock = async (req, res) => {
@@ -12,10 +13,20 @@ const createStock = async (req, res) => {
             Color.findByPk(color_id)
         ]);
 
-        if (!prenda || !talle || !color) {
+        if (!prenda) {
             return res.status(404).json({
-                message: 'No se encontró la prenda, talle o color especificado'
+                message: 'No se encontró la prenda'
             });
+        }
+        if(!talle){
+            return res.status(404).json({
+                message: "No se encontro el talle"
+            })
+        }
+        if(!color){
+            return res.status(404).json({
+                message: "No se encontro el color"
+            })
         }
 
         // Verificar si ya existe un stock para esta combinación
@@ -54,7 +65,7 @@ const createStock = async (req, res) => {
 const updateStock = async (req, res) => {
     try {
         const { id } = req.params;
-        const { cantidad, disponible } = req.body;
+        const { cantidad, disponible, prenda_id, talle_id, color_id } = req.body;
 
         const stock = await Stock.findByPk(id);
 
@@ -63,10 +74,35 @@ const updateStock = async (req, res) => {
                 message: 'No se encontró el registro de stock'
             });
         }
+        // Solo verificar duplicados si se están cambiando las claves de referencia
+        if (prenda_id !== undefined || talle_id !== undefined || color_id !== undefined) {
+            // Usar los valores nuevos o los actuales si no se proporcionan nuevos
+            const newPrendaId = prenda_id !== undefined ? prenda_id : stock.prenda_id;
+            const newTalleId = talle_id !== undefined ? talle_id : stock.talle_id;
+            const newColorId = color_id !== undefined ? color_id : stock.color_id;
+            
+            // Buscar si ya existe otro registro con esta combinación (excluyendo el actual)
+            const existingStock = await Stock.findOne({
+                where: { 
+                    prenda_id: newPrendaId, 
+                    talle_id: newTalleId, 
+                    color_id: newColorId,
+                    id: { [Op.ne]: id } // Excluir el registro actual
+                }
+            });
+            if (existingStock) {
+                return res.status(400).json({
+                    message: 'Ya existe un registro de stock para esta combinación de prenda, talle y color'
+                });
+            }
+        }
 
         await stock.update({
             cantidad: cantidad !== undefined ? cantidad : stock.cantidad,
-            disponible: disponible !== undefined ? disponible : stock.disponible
+            disponible: disponible !== undefined ? disponible : stock.disponible,
+            prenda_id: prenda_id!== undefined? prenda_id : stock.prenda_id,
+            talle_id: talle_id!== undefined? talle_id : stock.talle_id,
+            color_id: color_id!== undefined? color_id : stock.color_id
         });
 
         res.json({
@@ -82,7 +118,7 @@ const updateStock = async (req, res) => {
     }
 };
 
-// Obtener stock por producto
+// Se obtienen todos los stocks con el id de una prenda
 const getStockByProduct = async (req, res) => {
     try {
         const { id } = req.params;
