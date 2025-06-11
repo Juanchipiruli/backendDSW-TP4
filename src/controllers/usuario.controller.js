@@ -2,7 +2,7 @@ const { User, Carrito } = require('../models');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
-const token = {};
+let token = {};
 require('dotenv').config();
 
 /**
