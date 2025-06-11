@@ -1,6 +1,9 @@
 const { User, Carrito } = require('../models');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
+const jwt = require('jsonwebtoken');
+const token = {};
+require('dotenv').config();
 
 /**
  * Se obtienen todos los usuarios
@@ -41,77 +44,7 @@ const getUserById = async (req, res) => {
     }
 };
 
-/**
- * Se crea un usuario
- */
-const createUser = async (req, res) => {
-    try {
-        const { nombre, email, password, telefono, is_admin = false } = req.body;
-        
-        // Se valida que haya nombre, mail y contra
-        if (!nombre || !email || !password) {
-            return res.status(400).json({ 
-                message: 'Los campos nombre, email y password son obligatorios' 
-            });
-        }
-        
-        // Se valida la estructura del mail
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({ 
-                message: 'El formato del email no es válido' 
-            });
-        }
-        
-        // Se controla que el mail no este ya registrado
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            return res.status(400).json({ 
-                message: 'El email ya está registrado' 
-            });
-        }
-        
-        // Hash password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        
-        // Se crea el usuario
-        const newUser = await User.create({
-            nombre,
-            email,
-            password: hashedPassword,
-            telefono,
-            is_admin,
-            is_authenticated: true
-        });
-        
-        // Se devuelve el usuario sin la contraseña
-        const userResponse = {
-            id: newUser.id,
-            nombre: newUser.nombre,
-            email: newUser.email,
-            telefono: newUser.telefono,
-            is_admin: newUser.is_admin,
-            is_authenticated: newUser.is_authenticated,
-            createdAt: newUser.createdAt,
-            updatedAt: newUser.updatedAt
-        };
-        
-        res.status(201).json({
-            message: 'Usuario creado correctamente',
-            user: userResponse
-        });
-    } catch (error) {
-        if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-            return res.status(400).json({ message: error.message });
-        }
-        
-        res.status(500).json({ 
-            message: 'Error al crear el usuario',
-            error: error.message 
-        });
-    }
-};
+
 
 /**
  * Se actualiza un usuario
@@ -223,53 +156,99 @@ const deleteUser = async (req, res) => {
 /**
  * Login de usuario
  */
+// Login de usuario y generación de token
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Se valida que se obtenga contraseña y mail
+        // Validar que se proporcionaron email y password
         if (!email || !password) {
-            return res.status(400).json({ 
-                message: 'Email y password son requeridos' 
-            });
+            return res.status(400).json({ message: 'Se requiere email y contraseña' });
         }
         
-        // Se encuentra el usuario con el mail
+        // Buscar usuario por email
         const user = await User.findOne({ where: { email } });
         
         if (!user) {
-            return res.status(401).json({ message: 'Credenciales inválidas' });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
         
-        // Verificar coincidencia de contraseña
-        const passwordMatch = await bcrypt.compare(password, user.password);
+        // Verificar contraseña
+        const isPasswordValid = await bcrypt.compare(password, user.password);
         
-        if (!passwordMatch) {
-            return res.status(401).json({ message: 'Credenciales inválidas' });
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Contraseña incorrecta' });
         }
         
-        // Se actualiza el estado de autenticación
-        await user.update({ is_authenticated: true }); //vamos a tener que cambiarlo por la autenticacion via mail
+        // Generar token JWT
+        token = jwt.sign(
+            { 
+                id: user.id, 
+                email: user.email, 
+                isAdmin: user.isAdmin 
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
         
-        // Se preparan los datos SIN CONTRASEÑA
-        const userResponse = {
-            id: user.id,
-            nombre: user.nombre,
-            email: user.email,
-            telefono: user.telefono,
-            is_admin: user.is_admin,
-            is_authenticated: true
-        };
-        
-        res.json({ 
-            message: 'Login exitoso', 
-            user: userResponse 
+        res.json({
+            message: 'Login exitoso',
+            token,
+            user: {
+                id: user.id,
+                nombre: user.nombre,
+                email: user.email,
+                isAdmin: user.isAdmin
+            }
         });
     } catch (error) {
-        res.status(500).json({ 
-            message: 'Error en la autenticación',
-            error: error.message 
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Se crea un usuario
+ */
+// Registro de usuario con encriptación de contraseña
+const createUser = async (req, res) => {
+    try {
+        const { nombre, email, password, telefono, isAdmin = false } = req.body;
+        
+        // Validar datos
+        if (!nombre || !email || !password) {
+            return res.status(400).json({ message: 'Nombre, email y contraseña son obligatorios' });
+        }
+        
+        // Verificar si el usuario ya existe
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'El email ya está registrado' });
+        }
+        
+        // Encriptar contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Crear usuario
+        const newUser = await User.create({
+            nombre,
+            email,
+            password: hashedPassword,
+            telefono,
+            isAdmin,
+            isAuthenticated: true
         });
+        
+        res.status(201).json({
+            message: 'Usuario creado correctamente',
+            user: {
+                id: newUser.id,
+                nombre: newUser.nombre,
+                email: newUser.email,
+                isAdmin: newUser.isAdmin
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -286,7 +265,7 @@ const logoutUser = async (req, res) => {
         }
         
         await user.update({ is_authenticated: false });
-        
+        token = {};
         res.json({ message: 'Logout exitoso' });
     } catch (error) {
         res.status(500).json({ 

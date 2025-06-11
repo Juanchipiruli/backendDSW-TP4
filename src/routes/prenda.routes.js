@@ -7,12 +7,13 @@ const {
     updatePrenda,
     deletePrenda
 } = require('../controllers/prenda.controller');
+const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Definir las rutas
 router.get('/', getAllPrendas);
 router.get('/:id', getPrendaById);
-router.post('/', createPrenda);
-router.put('/:id', updatePrenda);
-router.delete('/:id', deletePrenda);
+router.post('/',verifyToken, isAdmin, createPrenda);
+router.put('/:id',verifyToken, isAdmin, updatePrenda);
+router.delete('/:id',verifyToken, isAdmin, deletePrenda);
 
 module.exports = router;

@@ -7,13 +7,15 @@ const {
     updateColor,
     deleteColor
 } = require('../controllers/color.controller');
+const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
-// Definir las rutas
+// Rutas publicas
 router.get('/', getAllColores);
 router.get('/:id', getColorById);
-router.post('/', createColor);
-router.put('/:id', updateColor);
-router.delete('/:id', deleteColor);
+// Rutas admin
+router.post('/',verifyToken, isAdmin, createColor);
+router.put('/:id',verifyToken, isAdmin, updateColor);
+router.delete('/:id',verifyToken, isAdmin, deleteColor);
 
 module.exports = router;
 

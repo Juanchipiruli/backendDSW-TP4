@@ -7,13 +7,14 @@ const {
     updateTalle,
     deleteTalle
 } = require('../controllers/talle.controller');
+const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Definir las rutas
-router.get('/', getAllTalles);
-router.get('/:id', getTalleById);
-router.post('/', createTalle);
-router.put('/:id', updateTalle);
-router.delete('/:id', deleteTalle);
+router.get('/', verifyToken, getAllTalles);
+router.get('/:id', verifyToken, getTalleById);
+router.post('/', verifyToken, isAdmin, createTalle);
+router.put('/:id',verifyToken, isAdmin, updateTalle);
+router.delete('/:id',verifyToken, isAdmin, deleteTalle);
 
 module.exports = router;
 

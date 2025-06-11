@@ -28,6 +28,9 @@ const getColorById = async (req, res) => {
 const createColor = async (req, res) => {
     try {
         const { nombre, codigo_hex } = req.body;
+        if(!(typeof(nombre)=== "string" || typeof(codigo_hex)=== "string")){
+            res.status(400).json({message: "Los parametros deben ser strings"})
+        }
         const nuevoColor = await Color.create({
             nombre,
             codigo_hex
@@ -42,6 +45,9 @@ const createColor = async (req, res) => {
 const updateColor = async (req, res) => {
     try {
         const { nombre, codigo_hex } = req.body;
+        if(!(typeof(nombre)=== "string" || typeof(codigo_hex)=== "string")){
+            res.status(400).json({message: "Los parametros deben ser strings"})
+        }
         const color = await Color.findByPk(req.params.id);
         
         if (color) {
