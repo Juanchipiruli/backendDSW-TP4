@@ -9,8 +9,8 @@ const adminUser = {
   email: 'admin@example.com',
   password: 'admin123', // Cambiar por una contraseña segura
   telefono: '123456789',
-  is_admin: true,
-  is_authenticated: true
+  isAdmin: true,
+  isAuthenticated: true
 };
 
 // Función para crear el usuario administrador
@@ -37,8 +37,8 @@ async function createAdminUser() {
       await existingUser.update({
         nombre: adminUser.nombre,
         password: hashedPassword,
-        is_admin: true,
-        is_authenticated: true
+        isAdmin: true,
+        isAuthenticated: true
       });
       
       console.log('Usuario actualizado correctamente como administrador.');
@@ -59,7 +59,7 @@ async function createAdminUser() {
       id: newAdmin.id,
       nombre: newAdmin.nombre,
       email: newAdmin.email,
-      is_admin: newAdmin.is_admin
+      isAdmin: newAdmin.isAdmin
     });
     
   } catch (error) {

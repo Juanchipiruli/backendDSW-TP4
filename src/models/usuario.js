@@ -26,11 +26,11 @@ const User = sequelize.define('User', {
   telefono: {
     type: DataTypes.STRING
   },
-  is_admin: {
+  isAdmin: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   },
-  is_authenticated: {
+  isAuthenticated: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
   }
