@@ -6,13 +6,15 @@ const {
     updateUser,
     deleteUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    validateToken
 } = require('../controllers/usuario.controller');
 const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Rutas públicas
 router.post('/login', loginUser);
 router.post('/', createUser); // Registro de usuario
+router.post('/validate-token', validateToken); // Validación de token
 
 // Rutas protegidas
 router.get('/:id', verifyToken, getUserById);

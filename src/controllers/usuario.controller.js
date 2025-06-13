@@ -6,6 +6,34 @@ let token = {};
 require('dotenv').config();
 
 /**
+ * Validar token de autenticación
+ */
+const validateToken = async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(403).json({ message: 'Se requiere un token para autenticación' });
+        }
+        
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        res.json({
+            valid: true,
+            user: {
+                id: decoded.id,
+                email: decoded.email,
+                isAdmin: decoded.isAdmin
+            }
+        });
+    } catch (error) {
+        res.status(401).json({
+            valid: false,
+            message: 'Token inválido o expirado'
+        });
+    }
+};
+
+/**
  * Se obtienen todos los usuarios
  */
 const getAllUsers = async (req, res) => {
@@ -282,5 +310,6 @@ module.exports = {
     updateUser,
     deleteUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    validateToken
 };
