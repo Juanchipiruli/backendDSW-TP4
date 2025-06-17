@@ -10,7 +10,7 @@ const {
 const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Definir las rutas
-router.get('/', verifyToken, getAllTalles);
+router.get('/', getAllTalles);
 router.get('/:id', verifyToken, getTalleById);
 router.post('/', verifyToken, isAdmin, createTalle);
 router.put('/:id',verifyToken, isAdmin, updateTalle);
