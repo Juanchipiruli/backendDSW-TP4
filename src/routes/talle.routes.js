@@ -11,7 +11,7 @@ const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Definir las rutas
 router.get('/', getAllTalles);
-router.get('/:id', verifyToken, getTalleById);
+router.get('/:id', getTalleById);
 router.post('/', verifyToken, isAdmin, createTalle);
 router.put('/:id',verifyToken, isAdmin, updateTalle);
 router.delete('/:id',verifyToken, isAdmin, deleteTalle);
