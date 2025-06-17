@@ -17,7 +17,7 @@ router.post('/',verifyToken, isAdmin , createStock);
 router.put('/:id',verifyToken, isAdmin, updateStock);
 
 // Obtener stock por prenda
-router.get('/product/:id',verifyToken, getStockByProduct);
+router.get('/product/:id', getStockByProduct);
 
 // Verificar disponibilidad
 router.post('/check-availability',verifyToken, checkAvailability);
