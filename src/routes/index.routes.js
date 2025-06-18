@@ -16,6 +16,7 @@ router.use('/api/prendas', prendaRoutes);
 router.use('/api/users', userRoutes);
 router.use('/api/stocks', stockRoutes);
 router.use('/api/carritos', carritoRoutes);
+router.use('/api/stocks', stockRoutes);
 
 // Ruta de prueba/salud
 router.get('/health', (req, res) => {
