@@ -76,7 +76,7 @@ const deleteColor = async (req, res) => {
                 res.status(400).json({ message: 'No se puede eliminar este color porque tiene stock asociado' });
             } else {
                 await color.destroy();
-                res.json({ message: 'Color eliminado' });
+                res.json({ message: 'Color eliminado', color: color });
             }
         }
     } catch (error) {

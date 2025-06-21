@@ -64,7 +64,7 @@ const deleteTalle = async (req, res) => {
                 return res.status(400).json({ message: 'No se puede eliminar el talle porque está asociado a un stock' });
             }else{
                 await talle.destroy();
-                res.json({ message: 'Talle eliminado correctamente' });
+                res.json({ message: 'Talle eliminado correctamente', talle: talle });
             }
             
         }
