@@ -1,4 +1,10 @@
 const {Prenda, Marca} = require('../models');
+const types = require('../defined/types.json');
+
+// Obtener todos los tipos de prendas
+const getAllTypes = async (req, res) => {
+    res.json(Object.values(types));
+}
 
 // Obtener todas las prendas
 const getAllPrendas = async (req, res) => {
@@ -31,11 +37,11 @@ const getPrendaById = async (req, res) => {
 const createPrenda = async (req, res) => {
     try {
         // Extraer los datos del cuerpo de la solicitud
-        const {nombre, descripcion, marca_id, precio, imagenes} = req.body;
+        const {nombre, tipo, marca_id, precio, imagenes} = req.body;
         
         // Validar campos obligatorios
-        if (!nombre || !marca_id || !precio) {
-            return res.status(400).json({ message: 'Los campos nombre, marca_id y precio son obligatorios' });
+        if (!nombre || !marca_id || !precio || !tipo) {
+            return res.status(400).json({ message: 'Los campos nombre, marca_id, precio y tipo son obligatorios' });
         }
 
         // Validar que la marca existe
@@ -47,7 +53,7 @@ const createPrenda = async (req, res) => {
         // Crear la prenda en la base de datos
         const nuevaPrenda = await Prenda.create({
             nombre,
-            descripcion,
+            tipo,
             marca_id,
             precio,
             imagenes
@@ -70,7 +76,7 @@ const createPrenda = async (req, res) => {
 // Actualizar una prenda
 const updatePrenda = async (req, res) => {
     try {
-        const {nombre, descripcion, marca_id, precio, imagenes} = req.body;
+        const {nombre, tipo, marca_id, precio, imagenes} = req.body;
         
         // Validar que la prenda existe
         const prenda = await Prenda.findByPk(req.params.id);
@@ -89,7 +95,7 @@ const updatePrenda = async (req, res) => {
         // Actualizar la prenda
         await prenda.update({
             nombre: nombre !== undefined ? nombre : prenda.nombre,
-            descripcion: descripcion !== undefined ? descripcion : prenda.descripcion,
+            tipo: tipo !== undefined ? tipo : prenda.tipo,
             marca_id: marca_id !== undefined ? marca_id : prenda.marca_id,
             precio: precio !== undefined ? precio : prenda.precio,
             imagenes: imagenes !== undefined ? imagenes : prenda.imagenes
@@ -138,5 +144,6 @@ module.exports ={
     getPrendaById,
     createPrenda,
     updatePrenda,
-    deletePrenda
+    deletePrenda,
+    getAllTypes
 }
