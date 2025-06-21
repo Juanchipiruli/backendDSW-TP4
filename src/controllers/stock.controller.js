@@ -50,7 +50,7 @@ const createStock = async (req, res) => {
 
         res.status(201).json({
             message: 'Stock creado exitosamente',
-            stock: newStock
+            stock: {...newStock.dataValues, Color: color, Talle: talle, Prenda: prenda}
         });
     } catch (error) {
         console.error('Error al crear stock:', error);
@@ -131,7 +131,6 @@ const getStockByProduct = async (req, res) => {
                 { model: Color }
             ]
         });
-
         res.json(stockItems);
     } catch (error) {
         console.error('Error al obtener stock:', error);
