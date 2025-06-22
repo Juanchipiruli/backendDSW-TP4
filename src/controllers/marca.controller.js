@@ -1,4 +1,4 @@
-const { Marca } = require('../models');
+const { Marca, Prenda } = require('../models');
 
 // Obtener todas las marcas
 const getAllMarcas = async (req, res) => {
@@ -63,6 +63,19 @@ const deleteMarca = async (req, res) => {
     try {
         const marca = await Marca.findByPk(req.params.id); // Obtenemos una marca por su id
         if (marca) {
+            
+            // Verificar si la marca está siendo usada por alguna prenda
+            const prendasConMarca = await Prenda.count({
+                where: { marca_id: req.params.id }
+            });
+            
+            if (prendasConMarca > 0) {
+                res.status(400).json({ 
+                    message: `No se puede eliminar la marca porque está siendo utilizada por ${prendasConMarca} prenda(s)` 
+                });
+                return;
+            }
+            
             await marca.destroy(); // Eliminamos la marca
             res.json({ message: 'Marca eliminada correctamente' });
         } else {
