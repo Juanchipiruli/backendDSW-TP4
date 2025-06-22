@@ -77,7 +77,7 @@ const deleteMarca = async (req, res) => {
             }
             
             await marca.destroy(); // Eliminamos la marca
-            res.json({ message: 'Marca eliminada correctamente' });
+            res.json({ message: 'Marca eliminada correctamente', marca: marca });
         } else {
             res.status(404).json({ message: 'Marca no encontrada' }); // Si no se encuentra la marca
         }
