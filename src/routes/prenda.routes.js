@@ -12,10 +12,10 @@ const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 // Definir las rutas
 router.get('/', getAllPrendas);
+router.get('/types', getAllTypes);
 router.get('/:id', getPrendaById);
 router.post('/',verifyToken, isAdmin, createPrenda);
 router.put('/:id',verifyToken, isAdmin, updatePrenda);
 router.delete('/:id',verifyToken, isAdmin, deletePrenda);
-router.get('/types', getAllTypes);
 
 module.exports = router;

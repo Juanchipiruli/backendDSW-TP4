@@ -1,12 +1,10 @@
 {
-    "Pantalon": "Pantalon",
-    "Camisa": "Camisa",
-    "Zapato": "Zapato",
-    "Chaqueta": "Chaqueta",
-    "Falda": "Falda",
-    "Vestido": "Vestido",
-    "Polo": "Polo",
-    "Camiseta": "Camiseta",
-    "Gorra": "Gorra",
-    "Bolsa": "Bolsa"
+    "types": [
+        "Pantalon",
+        "Camisa",
+        "Zapatilla",
+        "Buzo",
+        "Remera",
+        "Campera"
+    ]
 }

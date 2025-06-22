@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 const Marca = require('./marca');
+const types = require('../defined/types.json');
 
 const Prenda = sequelize.define('Prenda', {
   id: {
@@ -12,8 +13,8 @@ const Prenda = sequelize.define('Prenda', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  descripcion: {
-    type: DataTypes.STRING
+  tipo: {
+    type: DataTypes.STRING,
   },
   marca_id: {
     type: DataTypes.INTEGER,

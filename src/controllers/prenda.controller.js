@@ -3,7 +3,7 @@ const types = require('../defined/types.json');
 
 // Obtener todos los tipos de prendas
 const getAllTypes = async (req, res) => {
-    res.json(Object.values(types));
+    res.json(types.types);
 }
 
 // Obtener todas las prendas
