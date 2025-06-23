@@ -107,12 +107,11 @@ const createCarrito = async (req, res) => {
 // Funcion para agregar un item al carrito
 const addItemToCarrito = async (req, res) => {
     const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
-
     try {
-        const { carrito_id, stock_id, cantidad } = req.body; // Obtenemos el id del carrito, el id del stock y la cantidad de items
+        const { carrito_id, stock_id, cantidad, prenda_id } = req.body; // Obtenemos el id del carrito, el id del stock y la cantidad de items
 
         // Validamos los datos que se estan enviando y que cantidad no sea menor a 1
-        if (!carrito_id || !stock_id || !cantidad || cantidad < 1) {
+        if (!carrito_id || !stock_id || !cantidad || cantidad < 1 || !prenda_id) {
             return res.status(400).json({
                 message: 'Datos inválidos para agregar item al carrito'
             });
@@ -128,6 +127,11 @@ const addItemToCarrito = async (req, res) => {
         const stock = await Stock.findByPk(stock_id);
         if (!stock) {
             return res.status(404).json({ message: 'Stock no encontrado' });
+        }
+
+        const prenda = await Prenda.findByPk(prenda_id);
+        if (!prenda) {
+            return res.status(404).json({ message: 'Prenda no encontrada' });
         }
 
         // Verificamos si este stock esta disponible
@@ -173,7 +177,7 @@ const addItemToCarrito = async (req, res) => {
 
         res.json({
             message: 'Item agregado al carrito correctamente',
-            carritoStock
+            carritoStock: {...stock.dataValues, CarritoStock: carritoStock, Prenda: prenda}
         });
     } catch (error) {
         await t.rollback();
