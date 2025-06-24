@@ -6,7 +6,8 @@ const {
     getStockByProduct,
     checkAvailability,
     updateAvailability,
-    getAllStock
+    getAllStock,
+    deleteStock
 } = require('../controllers/stock.controller');
 const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
@@ -27,6 +28,9 @@ router.put('/:id/availability',verifyToken, isAdmin, updateAvailability);
 
 // Obtener todo el stock
 router.get('/',verifyToken, isAdmin, getAllStock);
+
+// Eliminar stock
+router.delete('/:id',verifyToken, isAdmin, deleteStock);
 
 module.exports = router;
 

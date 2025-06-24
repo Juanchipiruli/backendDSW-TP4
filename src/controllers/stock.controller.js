@@ -182,6 +182,7 @@ const checkAvailability = async (req, res) => {
 
 // Actualizar disponibilidad de stock
 const updateAvailability = async (req, res) => {
+    
     try {
         const { id } = req.params;
         const { disponible } = req.body;
@@ -230,12 +231,32 @@ const getAllStock = async (req, res) => {
     }
 };
 
+const deleteStock = async (req, res) => {
+    try {
+        const stock = await Stock.findByPk(req.params.id);
+        if(!stock){
+            return res.status(404).json({
+                message: 'No se encontró el registro de stock'
+            });
+        }
+        await stock.destroy();
+        res.json({ message: 'Stock eliminado exitosamente' });
+    } catch (error) {
+        console.error('Error al eliminar stock:', error);
+        res.status(500).json({
+            message: 'Error al eliminar el stock',
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     createStock,
     updateStock,
     getStockByProduct,
     checkAvailability,
     updateAvailability,
-    getAllStock
+    getAllStock,
+    deleteStock
 };
 
