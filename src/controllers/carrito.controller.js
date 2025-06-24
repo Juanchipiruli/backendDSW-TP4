@@ -1,4 +1,4 @@
-const { Carrito, CarritoStock, Stock, Prenda, User } = require('../models');
+const { Carrito, CarritoStock, Stock, Prenda, User, Talle, Color } = require('../models');
 const sequelize = require('../config/database');
 
 // Funcion que devuelve el carrito con sus items y el detalle de cada item con la prenda completa
@@ -46,6 +46,12 @@ const getUserCart = async (req, res) => {
                 include: [{
                     model: Prenda,
                     attributes: ['nombre', 'precio', 'imagenes']
+                }, {
+                    model: Talle,
+                    attributes: ['nombre']
+                }, {
+                    model: Color,
+                    attributes: ['nombre']
                 }]
             }]
         });
@@ -108,10 +114,10 @@ const createCarrito = async (req, res) => {
 const addItemToCarrito = async (req, res) => {
     const t = await sequelize.transaction(); // Creamos una nueva transaccion en la base de datos y almacenamos la referencia a esta
     try {
-        const { carrito_id, stock_id, cantidad, prenda_id } = req.body; // Obtenemos el id del carrito, el id del stock y la cantidad de items
+        const { carrito_id, stock_id, cantidad, prenda_id, color_id, talle_id } = req.body; // Obtenemos el id del carrito, el id del stock y la cantidad de items
 
         // Validamos los datos que se estan enviando y que cantidad no sea menor a 1
-        if (!carrito_id || !stock_id || !cantidad || cantidad < 1 || !prenda_id) {
+        if (!carrito_id || !stock_id || !cantidad || cantidad < 1 || !prenda_id || !color_id || !talle_id) {
             return res.status(400).json({
                 message: 'Datos inválidos para agregar item al carrito'
             });
@@ -132,6 +138,16 @@ const addItemToCarrito = async (req, res) => {
         const prenda = await Prenda.findByPk(prenda_id);
         if (!prenda) {
             return res.status(404).json({ message: 'Prenda no encontrada' });
+        }
+
+        const color = await Color.findByPk(color_id);
+        if (!color) {
+            return res.status(404).json({ message: 'Color no encontrado' });
+        }
+
+        const talle = await Talle.findByPk(talle_id);
+        if (!talle) {
+            return res.status(404).json({ message: 'Talle no encontrado' });
         }
 
         // Verificamos si este stock esta disponible
@@ -177,7 +193,7 @@ const addItemToCarrito = async (req, res) => {
 
         res.json({
             message: 'Item agregado al carrito correctamente',
-            carritoStock: {...stock.dataValues, CarritoStock: carritoStock, Prenda: prenda}
+            carritoStock: {...stock.dataValues, CarritoStock: carritoStock, Prenda: prenda, Color: color, Talle: talle}
         });
     } catch (error) {
         await t.rollback();
@@ -273,7 +289,7 @@ const removeCarritoItem = async (req, res) => {
 
         await t.commit();
 
-        res.json({ message: 'Item eliminado del carrito correctamente' });
+        res.json({ message: 'Item eliminado del carrito correctamente', carritoStock });
     } catch (error) { // Devolvemos error si algo sale mal
         await t.rollback();
         res.status(500).json({
