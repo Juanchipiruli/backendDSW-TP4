@@ -240,7 +240,7 @@ const deleteStock = async (req, res) => {
             });
         }
         await stock.destroy();
-        res.json({ message: 'Stock eliminado exitosamente' });
+        res.json({ message: 'Stock eliminado exitosamente', stock });
     } catch (error) {
         console.error('Error al eliminar stock:', error);
         res.status(500).json({
